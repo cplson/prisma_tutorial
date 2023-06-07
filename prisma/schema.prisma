@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// @ signifies a field level attribute, meaning its applied to a single field
+// @ signifies a block level attribute, meaing its applied to more than one field
+model User {
+  // name - Data Type - Field Modifier (? - optional field) - Attributes
+  id               String           @id @default(uuid())
+  name             String
+  age              Int
+  email            String           @unique
+  role             Role             @default(BASIC)
+  writtenPosts     Post[]           @relation("WrittenPosts")
+  favoritePosts    Post[]           @relation("FavoritePosts")
+  userPreference   UserPreference?            @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?          @unique
+
+  //block level attributes
+  @@unique([age, name])
+  @@index([email])
+}
+
+model UserPreference {
+  id           String  @id @default(uuid())
+  emailUpdates Boolean
+  user         User? 
+}
+
+model Post {
+  id            String     @id @default(uuid())
+  title         String
+  averageRating Float
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  author        User       @relation("WrittenPosts", fields: [authorId], references: [id])
+  authorId      String
+  favoritedBy   User?      @relation("FavoritePosts", fields: [favoritedById], references: [id])
+  favoritedById String?
+  categories    Category[]
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  ADMIN
+}
